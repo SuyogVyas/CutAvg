@@ -1,12 +1,35 @@
 
+input[type="file"]{
+  visibility: hidden;
+}
+
+button[type="button"]{
+  width: fit-content;
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+mat-spinner{
+  margin: auto;
+}
+
+.image-preview{
+  height: 5rem;
+  margin: 1rem 0;
+  margin-left: 20px;
+}
+
+.image-preview img{
+  height: 100%;
+}
 
 mat-form-field{
   width: 90%;
   margin: auto;
 }
 
-button{
+button[type="submit"]{
   width: 8%;
-  margin-left: 5%;
+  margin-left: 20px;
   margin-bottom: 5px;
 }
