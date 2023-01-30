@@ -3,12 +3,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 const postRoutes = require("./routes/route")
+const path = require("path")
 
 
 let cors = require('cors')
 app.use(cors())
 
-//mongoose.set('strictQuery', true);
+mongoose.set('strictQuery', true);
 
 mongoose
   .connect(
@@ -36,6 +37,7 @@ mongoose
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use("/images",express.static(path.join("backend/images")))
 
 //gF4Cn2QGL26cAEh
 

@@ -1,15 +1,45 @@
 const express = require('express')
 const Post = require('../model/post')
+const multer = require("multer")
 const router = express.Router()
 
-router.post("", (req, res, next) => {
+const MIME_TYPE = {
+  'images/png':'png',
+  'images/jpeg':'jpeg',
+  'images/jpg':'jpg',
+  'images/jfif':'jpg'
+}
+
+const storage = multer.diskStorage({
+
+  //destination method is used to decide where the files will be stored
+  destination:(req,file,cb)=>{
+
+    //callback function take error as null and 2nd argument is for the path where we store file
+    cb(null,"backend/images")
+  },
+
+  //filename is used to change the filename
+  filename:(req,file,cb)=>{
+    const name = file.originalname.toLowerCase().split(".")[0]
+    console.log(name)
+    const ext = file.originalname.toLowerCase().split(".")[1]
+    cb(null,name+Date.now()+"."+ext)
+  }
+})
+
+router.post("",multer({"storage":storage}).single("image") ,(req, res, next) => {
   // const post = req.body;
+  const url = req.protocol + "://" + req.get("host")
   const post = new Post({
     title: req.body.title,
     content: req.body.content,
+    imagePath: url + "/images/" + req.file.filename
+
   });
   post.save().then((result)=>{
-    console.log(result._id)
+    console.log(post.imagePath)
+    console.log(req.file.filename)
     res.status(200).json({
       posts: post,
       postId:result._id
@@ -20,21 +50,50 @@ router.post("", (req, res, next) => {
 });
 
 router.get("", (req, res, next) => {
-  Post.find().then((document) => {
+
+  //+ is used to convert string to int
+  //by default req.query.pageSize will return invalid if no values are passed in url
+  //pageSize name is upto you, you can write any name
+  //we are passing the values in url after the domain name like page=2&pagesize=10 and
+  //fetching this here
+  const pageSize = +req.query.pageSize
+  const currentPage = +req.query.page
+  const PostQuery = Post.find()
+
+  if(pageSize && currentPage){
+
+    //mongoose skip method is used to skip first N elements to get fetched from database
+    //limit is used to only return certain number of elements from database
+    PostQuery.skip(pageSize * (currentPage-1))
+    .limit(pageSize)
+  }
+
+  PostQuery.find().then((document) => {
     res.status(201).json({
       post: document,
     });
   });
 });
 
-router.put("/:id",(req,res,next)=>{
+router.put("/:id",multer({"storage":storage}).single("image"),(req,res,next)=>{
 
+  let imagePath = req.body.imagePath
+  if(req.file){
+    //this will return the hostname like http://localhost:3000
+    const url = req.protocol + "://" + req.get("host")
+
+    // we are adding the image path after url
+    imagePath = url + "/images/" + req.file.filename
+
+  }
   const post = Post({
     _id:req.body.id,
     title:req.body.title,
-    content:req.body.content
+    content:req.body.content,
+    imagePath:imagePath
   })
 
+  console.log(post)
   Post.updateOne({_id:req.params.id},post).then((result)=>{
     console.log(result);
     res.status(200).json({
