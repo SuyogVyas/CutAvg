@@ -59,6 +59,7 @@ router.get("", (req, res, next) => {
   const pageSize = +req.query.pageSize
   const currentPage = +req.query.page
   const PostQuery = Post.find()
+  let fetchedPosts
 
   if(pageSize && currentPage){
 
@@ -68,9 +69,15 @@ router.get("", (req, res, next) => {
     .limit(pageSize)
   }
 
-  PostQuery.find().then((document) => {
+  PostQuery.find()
+  .then((document)=>{
+    fetchedPosts = document
+    return Post.count()
+  })
+  .then(count => {
     res.status(201).json({
-      post: document,
+      post: fetchedPosts,
+      maxPosts:count
     });
   });
 });

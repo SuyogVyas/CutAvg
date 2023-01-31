@@ -9,31 +9,32 @@ import { Post } from "../model/post.model";
 export class PostsService {
 
   posts: Post[] = []
-  private postUpdated = new Subject<Post[]>(); //Subject emits value subscribe it to listen changes
+  private postUpdated = new Subject<{posts:Post[],postCount:number}>(); //Subject emits value subscribe it to listen changes
 
   constructor(private http: HttpClient, private _router: Router) { }
 
-  getPost() {
+  getPost(postsPerPage:number,currentPage:number) {
 
-    //return this.http.get<any>("http://localhost:3000/api/posts")
+    const queryParams = `?pageSize=${postsPerPage}&page=${currentPage}`
 
-    return this.http.get<any>("http://localhost:3000/api/posts")
+    return this.http.get<any>("http://localhost:3000/api/posts"+ queryParams)
       .pipe(map((postData) => {
-        return postData.post.map((pos: any) => {
+        return { posts:postData.post.map((pos: any) => {
           return {
             title: pos.title,
             content: pos.content,
             id: pos._id,
             imagePath: pos.imagePath
           }
-          console.log("getpost ",pos.imagePath)
-        })
+        }),
+      maxPosts: postData.maxPosts
+    }
       }))
       .subscribe(
         (transformedPosts) => {
-          this.posts = transformedPosts
-
-          this.postUpdated.next([...this.posts]);
+          this.posts = transformedPosts.posts
+          //maxPosts is on backend, postCount frontend name
+          this.postUpdated.next({posts:[...this.posts],postCount:transformedPosts.maxPosts});
         });
 
     //return [...this.posts] //[...this.posts] is the syntax to pass the copy of array/// this.post passes reference
@@ -55,11 +56,11 @@ export class PostsService {
     postData.append("image", image)
     return this.http.post<any>("http://localhost:3000/api/posts", postData).subscribe(responseData => {
 
-      const post: Post = { id: responseData.postId, title: responseData.title, content: responseData.content, imagePath: responseData.imagePath }
-      const id = responseData.postId;
-      post.id = id;
-      this.posts.push(post);
-      this.postUpdated.next([...this.posts]);
+      // const post: Post = { id: responseData.postId, title: responseData.title, content: responseData.content, imagePath: responseData.imagePath }
+      // const id = responseData.postId;
+      // post.id = id;
+      // this.posts.push(post);
+      // this.postUpdated.next([...this.posts]);
       this._router.navigate(["/"]);
     })
 
@@ -68,10 +69,7 @@ export class PostsService {
 
   updatePost(id: string, title: string, content: string, image: File | string) {
     let postData:any = ""
-    console.log("id "+id)
-    console.log("title "+title)
-    console.log("content "+content)
-    console.log("image "+image)
+
     //here can be two scenarios
     //user has changed image or image is same
     //if image is same then the same string will be passed
@@ -90,18 +88,18 @@ export class PostsService {
 
     console.log(postData)
     this.http.put("http://localhost:3000/api/posts/" + id, postData).subscribe((res) => {
-      console.log("Updated")
-      const updatedPosts = [...this.posts]
-      const oldPostIndex = updatedPosts.findIndex(p => p.id  === id)
-      const post:Post = {
-        id:id,
-        title:title,
-        content:content,
-        imagePath:image
-      }
-      updatedPosts[oldPostIndex]  = post
-      this.posts = updatedPosts
-      this.postUpdated.next([...this.posts])
+      // console.log("Updated")
+      // const updatedPosts = [...this.posts]
+      // const oldPostIndex = updatedPosts.findIndex(p => p.id  === id)
+      // const post:Post = {
+      //   id:id,
+      //   title:title,
+      //   content:content,
+      //   imagePath:image
+      // }
+      // updatedPosts[oldPostIndex]  = post
+      // this.posts = updatedPosts
+      // this.postUpdated.next([...this.posts])
       this._router.navigate(["/"]);
     })
 
@@ -113,13 +111,13 @@ export class PostsService {
   }
 
   deletePost(postId: string) {
-    this.http.delete("http://localhost:3000/api/posts/" + postId)
-      .subscribe(() => {
-        const updatedPosts = this.posts.filter(post => post.id !== postId);
-        this.posts = updatedPosts;
-        this.postUpdated.next([...this.posts]);
+    return this.http.delete("http://localhost:3000/api/posts/" + postId)
+      // .subscribe(() => {
+      //   const updatedPosts = this.posts.filter(post => post.id !== postId);
+      //   this.posts = updatedPosts;
+      //   this.postUpdated.next([...this.posts]);
 
-      });
+      // });
   }
 
 }
