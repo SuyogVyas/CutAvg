@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 const postRoutes = require("./routes/route")
+const userRoutes = require("./routes/user")
 const path = require("path")
 
 
@@ -42,5 +43,6 @@ app.use("/images",express.static(path.join("backend/images")))
 //gF4Cn2QGL26cAEh
 
 app.use("/api/posts",postRoutes)
+app.use("/api/user",userRoutes)
 
 module.exports = app;
